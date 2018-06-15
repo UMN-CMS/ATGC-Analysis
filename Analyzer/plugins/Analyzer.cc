@@ -1,458 +1,196 @@
-// -*- C++ -*-
-//
-// Package:    Analyser/Analyzer
-// Class:      Analyzer
-// 
-/**\class Analyzer Analyzer.cc Analyser/Analyzer/plugins/Analyzer.cc
+#include "ATGC-Analysis/Analyzer/interface/Analyzer.h"
 
- Description: [one line class summary]
+using namespace std;
+using namespace edm;
 
- Implementation:
-     [Notes on implementation]
-*/
-//
-// Original Author:  Shilpi Jain
-//         Created:  Mon, 29 Jan 2018 00:08:57 GMT
-//
-//
+void setbit(UShort_t& x, UShort_t bit) {
+  UShort_t a = 1;
+  x |= (a << bit);
+}
 
-
-// system include files
-#include <memory>
-
-// user include files
-#include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/one/EDAnalyzer.h"
-
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/MakerMacros.h"
-
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "CommonTools/UtilAlgos/interface/TFileService.h"
-
-#include "DataFormats/EcalDigi/interface/EBSrFlag.h"
-#include "DataFormats/EcalDigi/interface/EESrFlag.h"
-
-#include "DataFormats/EcalDigi/interface/EcalDigiCollections.h"
-
-#include "DataFormats/ParticleFlowReco/interface/PFCluster.h"
-#include "DataFormats/ParticleFlowReco/interface/PFClusterFwd.h"
-#include "DataFormats/ParticleFlowReco/interface/PFLayer.h"
-//#include "CalibCalorimetry/EcalTPGTools/interface/EcalReadoutTools.h"
-
-#include "CondFormats/DataRecord/interface/GBRDWrapperRcd.h"
-
-#include "Geometry/CaloTopology/interface/EcalTrigTowerConstituentsMap.h"
-
-#include "DataFormats/VertexReco/interface/Vertex.h"
-#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
-
-
-#include "DataFormats/EgammaReco/interface/SuperCluster.h"
-#include "DataFormats/EgammaReco/interface/SuperClusterFwd.h"
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateEGammaExtra.h"
-
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateEGammaExtraFwd.h"
-
-#include "DataFormats/EgammaCandidates/interface/Photon.h"
-#include "DataFormats/EgammaCandidates/interface/PhotonFwd.h"
-#include "DataFormats/EgammaCandidates/interface/Electron.h"
-#include "DataFormats/EgammaCandidates/interface/ElectronFwd.h"
-
-#include "DataFormats/PatCandidates/interface/Photon.h"
-
-#include "CommonTools/CandAlgos/interface/ModifyObjectValueBase.h"
-
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "ATGC-Analysis/Analyzer/interface/GenParticleParentage.h"
-
-
-//
-// class declaration
-//
-
-#include "TTree.h"
-#include <iostream>
-#include <vector>
-
-//
-// class declaration
-//
-
-// If the analyzer does not use TFileService, please remove
-// the template argument to the base class so the class inherits
-// from  edm::one::EDAnalyzer<> and also remove the line from
-// constructor "usesResource("TFileService");"
-// This will improve performance in multithreaded jobs.
-
-class Analyzer : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
-   public:
-      explicit Analyzer(const edm::ParameterSet&);
-      ~Analyzer();
-
-      static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
-
-
-   private:
-      virtual void beginJob() override;
-      virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
-      virtual void endJob() override;
-
-      // ----------member data ---------------------------
-  //edm::EDGetTokenT<reco::PhotonCollection> recophotonCollection_;
-  edm::EDGetTokenT<edm::View<pat::Electron> > recoelectronCollection_;
-  edm::EDGetTokenT<std::vector<reco::GenParticle> > genParticlesCollection_;
-  
-  bool doGenParticles_;
-  bool doRecoEle_;
-  
-  std::shared_ptr<ModifyObjectValueBase> regress_;
-
-  TTree *tree_;
-  std::vector<float> egmeleEcalE;
-  std::vector<float> egmeleSCEta;
-  std::vector<float> egmeleSCPhi;
-  std::vector<float> egmeleSCE;
-  std::vector<float> egmeleEta;
-  std::vector<float> egmelePhi;
-  std::vector<float> egmelerawSCE;
-  std::vector<float> egmeleGenE;
-  std::vector<float> egmeleGenEta;
-  std::vector<float> egmeleGenPhi;
-  std::vector<float> egmeleGenPt;
-
-
-  Int_t            nMC_;
-  std::vector<int>      mcPID;
-  std::vector<float>    mcVtx;
-  std::vector<float>    mcVty;
-  std::vector<float>    mcVtz;
-  std::vector<float>    mcPt;
-  std::vector<float>    mcMass;
-  std::vector<float>    mcEta;
-  std::vector<float>    mcPhi;
-  std::vector<float>    mcE;
-  std::vector<float>    mcEt;
-  std::vector<int>      mcGMomPID;
-  std::vector<int>      mcMomPID;
-  std::vector<float>    mcMomPt;
-  std::vector<float>    mcMomMass;
-  std::vector<float>    mcMomEta;
-  std::vector<float> mcMomPhi;
-
-  int run;
-  int lumi;
-  int event;
-
-};
-
-//
-// constants, enums and typedefs
-//
-
-//
-// static data member definitions
-//
-
-//
-// constructors and destructor
-//
-Analyzer::Analyzer(const edm::ParameterSet& iConfig):
-  regress_(0)
+Analyzer::Analyzer(const edm::ParameterSet& ps) :
+  hltPrescaleProvider_(ps, consumesCollector(), *this)
 {
-  //now do what ever initialization is needed
-  usesResource("TFileService");
-  edm::Service<TFileService> fs;
-  tree_ = fs->make<TTree>("EventTree", "EGM tree");
+
+  development_               = ps.getParameter<bool>("development");
+  addFilterInfoAOD_          = ps.getParameter<bool>("addFilterInfoAOD");
+  addFilterInfoMINIAOD_      = ps.getParameter<bool>("addFilterInfoMINIAOD");
+
+  doGenParticles_            = ps.getParameter<bool>("doGenParticles");
+  doCalib_            = ps.getParameter<bool>("doCalib");
+  runOnParticleGun_          = ps.getParameter<bool>("runOnParticleGun");
+  runOnSherpa_               = ps.getParameter<bool>("runOnSherpa");
+  runOnVtx_               = ps.getParameter<bool>("runOnVtx");
+  runOnReco_               = ps.getParameter<bool>("runOnReco");
+  dumpPhotons_               = ps.getParameter<bool>("dumpPhotons");
+  dumpElectrons_               = ps.getParameter<bool>("dumpElectrons");
+  dumpMuons_               = ps.getParameter<bool>("dumpMuons");
+  dumpJets_                  = ps.getParameter<bool>("dumpJets");
+  dumpSubJets_               = ps.getParameter<bool>("dumpSubJets");
+  dumpSoftDrop_              = ps.getParameter<bool>("dumpSoftDrop");
+  dumpPDFSystWeight_         = ps.getParameter<bool>("dumpPDFSystWeight");
+  dumpGenScaleSystWeights_   = ps.getParameter<bool>("dumpGenScaleSystWeights");
+  isAOD_                     = ps.getParameter<bool>("isAOD");
   
-  //recophotonCollection_ = consumes<reco::ElectronCollection> (iConfig.getParameter<edm::InputTag>("recoElectronSrc"));
-  recoelectronCollection_ = consumes<edm::View<pat::Electron> > (iConfig.getParameter<edm::InputTag>("recoElectronSrc"));
 
-  doGenParticles_ = iConfig.getParameter<bool>("doGenParticles");
-  doRecoEle_ = iConfig.getParameter<bool>("doRecoEle");
-  genParticlesCollection_ = consumes<std::vector<reco::GenParticle> > (iConfig.getParameter<edm::InputTag>("genParticleSrc"));
+  vtxLabel_                  = consumes<reco::VertexCollection>        (ps.getParameter<InputTag>("VtxLabel"));
+  vtxBSLabel_                = consumes<reco::VertexCollection>        (ps.getParameter<InputTag>("VtxBSLabel"));
+  rhoLabel_                  = consumes<double>                        (ps.getParameter<InputTag>("rhoLabel"));
+  rhoCentralLabel_           = consumes<double>                        (ps.getParameter<InputTag>("rhoCentralLabel"));
+  trgResultsLabel_           = consumes<edm::TriggerResults>           (ps.getParameter<InputTag>("triggerResults"));
+  trgResultsProcess_         =                                          ps.getParameter<InputTag>("triggerResults").process();
+  generatorLabel_            = consumes<GenEventInfoProduct>           (ps.getParameter<InputTag>("generatorLabel"));
+  lheEventLabel_             = consumes<LHEEventProduct>               (ps.getParameter<InputTag>("LHEEventLabel"));
+  puCollection_              = consumes<vector<PileupSummaryInfo> >    (ps.getParameter<InputTag>("pileupCollection"));
+  genParticlesCollection_    = consumes<vector<reco::GenParticle> >    (ps.getParameter<InputTag>("genParticleSrc"));
+  electronCollection_        = consumes<View<pat::Electron> >          (ps.getParameter<InputTag>("electronSrc"));
+  calibelectronCollection_   = consumes<View<pat::Electron> >          (ps.getParameter<InputTag>("calibelectronSrc"));
+  gsfTracks_                 = consumes<View<reco::GsfTrack>>          (ps.getParameter<InputTag>("gsfTrackSrc"));
+
+  photonCollection_          = consumes<View<pat::Photon> >            (ps.getParameter<InputTag>("photonSrc"));
+  calibphotonCollection_     = consumes<View<pat::Photon> >            (ps.getParameter<InputTag>("calibphotonSrc"));
+  muonCollection_            = consumes<View<pat::Muon> >              (ps.getParameter<InputTag>("muonSrc"));
+  ebReducedRecHitCollection_ = consumes<EcalRecHitCollection>          (ps.getParameter<InputTag>("ebReducedRecHitCollection"));
+  eeReducedRecHitCollection_ = consumes<EcalRecHitCollection>          (ps.getParameter<InputTag>("eeReducedRecHitCollection"));
+  esReducedRecHitCollection_ = consumes<EcalRecHitCollection>          (ps.getParameter<InputTag>("esReducedRecHitCollection")); 
+  recophotonCollection_      = consumes<reco::PhotonCollection>        (ps.getParameter<InputTag>("recoPhotonSrc"));
+  tracklabel_                = consumes<reco::TrackCollection>         (ps.getParameter<InputTag>("TrackLabel"));
+  gsfElectronlabel_          = consumes<reco::GsfElectronCollection>   (ps.getParameter<InputTag>("gsfElectronLabel"));
+  pfAllParticles_            = consumes<reco::PFCandidateCollection>   (ps.getParameter<InputTag>("PFAllCandidates"));
+  ///pckPFCandidateCollection_  = consumes<pat::PackedCandidateCollection>(ps.getParameter<InputTag>("packedPFCands"));
+  //pckPFCdsLabel_             = consumes<vector<pat::PackedCandidate>>  (ps.getParameter<InputTag>("packedPFCands"));
+  recoCdsLabel_              = consumes<View<reco::Candidate>>         (ps.getParameter<InputTag>("packedPFCands"));
+
+  jetsAK4Label_              = consumes<View<pat::Jet> >               (ps.getParameter<InputTag>("ak4JetSrc"));
+  jetsAK8Label_              = consumes<View<pat::Jet> >               (ps.getParameter<InputTag>("ak8JetSrc"));
+  //boostedDoubleSVLabel_      = consumes<reco::JetTagCollection>        (ps.getParameter<InputTag>("boostedDoubleSVLabel"));
+  newparticles_              =                                          ps.getParameter< vector<int > >("newParticles");
+  //jecAK8PayloadNames_        =                                          ps.getParameter<std::vector<std::string> >("jecAK8PayloadNames"); 
+
+  //pfLooseId_                 = ps.getParameter<ParameterSet>("pfLooseId");
+
+  //egmScaler_   = new EnergyScaleCorrection_class("EgammaAnalysis/ElectronTools/data/ScalesSmearings/Moriond17_23Jan_ele");
+
+  // electron ID 
+  eleVetoIdMapToken_       = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("eleVetoIdMap"));
+  eleLooseIdMapToken_      = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("eleLooseIdMap"));
+  eleMediumIdMapToken_     = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("eleMediumIdMap"));
+  eleTightIdMapToken_      = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("eleTightIdMap"));
+  //eleHLTIdMapToken_        = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("eleHLTIdMap"));
+  eleHEEPIdMapToken_       = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("eleHEEPIdMap"));
+  //eleMVAValuesMapToken_    = consumes<edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("eleMVAValuesMap"));
+  //eleMVAHZZValuesMapToken_ = consumes<edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("eleMVAHZZValuesMap"));
+  elePFClusEcalIsoToken_   = mayConsume<edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("elePFClusEcalIsoProducer"));
+  elePFClusHcalIsoToken_   = mayConsume<edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("elePFClusHcalIsoProducer"));
+
+  // Photon ID in VID framwork 
+  phoLooseIdMapToken_             = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("phoLooseIdMap"));
+  phoMediumIdMapToken_            = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("phoMediumIdMap"));
+  phoTightIdMapToken_             = consumes<edm::ValueMap<bool> >(ps.getParameter<edm::InputTag>("phoTightIdMap"));
+  phoMVAValuesMapToken_           = consumes<edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoMVAValuesMap")); 
+  phoChargedIsolationToken_       = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoChargedIsolation"));
+  phoNeutralHadronIsolationToken_ = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoNeutralHadronIsolation"));
+  phoPhotonIsolationToken_        = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoPhotonIsolation"));
+  phoWorstChargedIsolationToken_  = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoWorstChargedIsolation"));
+
+  //phoChargedIsolationToken_CITK_       = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoChargedIsolation_CITK"));
+  //phoPhotonIsolationToken_CITK_        = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoPhotonIsolation_CITK"));
+  //phoNeutralHadronIsolationToken_CITK_ = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoNeutralHadronIsolation_CITK"));
   
-  edm::ConsumesCollector sumes(consumesCollector());
-  
-  regress_.reset(ModifyObjectValueFactory::get()->create( "EGExtraInfoModifierFromDB", iConfig.getParameter<edm::ParameterSet>("regressionConfig") )); 
-  regress_->setConsumes(sumes);
+  //phoChargedIsolationToken_PUPPI_       = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoChargedIsolation_PUPPI"));
+  //phoNeutralHadronIsolationToken_PUPPI_ = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoNeutralHadronIsolation_PUPPI"));
+  //phoPhotonIsolationToken_PUPPI_        = consumes <edm::ValueMap<float> >(ps.getParameter<edm::InputTag>("phoPhotonIsolation_PUPPI"));
 
-  tree_->Branch("run",&run);
-  tree_->Branch("lumi",&lumi);
-  tree_->Branch("event",&event);
+  Service<TFileService> fs;
+  tree_    = fs->make<TTree>("EventTree", "Event data (tag V08_00_26_06)");
+  hEvents_ = fs->make<TH1F>("hEvents",    "total processed and skimmed events",   2,  0,   2);
 
-  if(doRecoEle_){
-    tree_->Branch("egmeleEcalE",&egmeleEcalE);
-    tree_->Branch("egmeleSCEta",&egmeleSCEta);   
-    tree_->Branch("egmeleSCPhi",&egmeleSCPhi);   
-    tree_->Branch("egmeleSCE",&egmeleSCE);   
-  tree_->Branch("egmelerawSCE",&egmelerawSCE); 
-  tree_->Branch("egmeleEta",&egmeleEta);   
-  tree_->Branch("egmelePhi",&egmelePhi);   
+  if(runOnReco_) branchesGlobalEvent(tree_);
 
-
-  tree_->Branch("egmeleGenE",&egmeleGenE);   
-  tree_->Branch("egmeleGenPt",&egmeleGenPt);   
-  tree_->Branch("egmeleGenPhi",&egmeleGenPhi);   
-  tree_->Branch("egmeleGenEta",&egmeleGenEta);   
+  if (doGenParticles_) {
+    branchesGenInfo(tree_, fs);
+    branchesGenPart(tree_);
   }
 
-  tree_->Branch("nMC",          &nMC_);
-  tree_->Branch("mcPID",        &mcPID);
-  tree_->Branch("mcVtx",        &mcVtx);
-  tree_->Branch("mcVty",        &mcVty);
-  tree_->Branch("mcVtz",        &mcVtz);
-  tree_->Branch("mcPt",         &mcPt);
-  tree_->Branch("mcMass",       &mcMass);
-  tree_->Branch("mcEta",        &mcEta);
-  tree_->Branch("mcPhi",        &mcPhi);
-  tree_->Branch("mcE",          &mcE);
-  tree_->Branch("mcEt",         &mcEt);
-  tree_->Branch("mcMomPID",     &mcMomPID);
-  tree_->Branch("mcMomPt",      &mcMomPt);
-  tree_->Branch("mcMomMass",    &mcMomMass);
-  tree_->Branch("mcMomEta",     &mcMomEta);
-  tree_->Branch("mcMomPhi", &mcMomPhi);
-  
+  if(dumpPhotons_) branchesPhotons(tree_);
+  if(dumpElectrons_) branchesElectrons(tree_);
+  if(dumpMuons_) branchesMuons(tree_);
+  if (dumpJets_)       branchesJets(tree_);
+}
+
+Analyzer::~Analyzer() {
+  cleanupPhotons();
+}
+
+void Analyzer::analyze(const edm::Event& e, const edm::EventSetup& es) {
+
+  hEvents_->Fill(0.5);
+
+  if (doGenParticles_) {
+    jetResolution_   = JME::JetResolution::get(es, "AK4PFchs_pt");
+    jetResolutionSF_ = JME::JetResolutionScaleFactor::get(es, "AK4PFchs");
+    AK8jetResolution_   = JME::JetResolution::get(es, "AK8PFchs_pt");
+    AK8jetResolutionSF_ = JME::JetResolutionScaleFactor::get(es, "AK8PFchs");
+  }
+
+
+
+
+  //std::cout<<"taking vertex collection"<<std::endl;
+    edm::Handle<reco::VertexCollection> vtxHandle;
+    math::XYZPoint pv(0, 0, 0);    
+    reco::Vertex vtx;
+  if( runOnVtx_ || dumpElectrons_ || dumpMuons_ ){
+    e.getByToken(vtxLabel_, vtxHandle);
+    
+
+    ///std::cout<<"took vertex collection"<<std::endl;
+    
+    // best-known primary vertex coordinates
+
+    for (vector<reco::Vertex>::const_iterator v = vtxHandle->begin(); v != vtxHandle->end(); ++v) {
+      // replace isFake() for miniAOD since it requires tracks while miniAOD vertices don't have tracks:
+      // Vertex.h: bool isFake() const {return (chi2_==0 && ndof_==0 && tracks_.empty());}
+      bool isFake = isAOD_ ? v->isFake() : (v->chi2() == 0 && v->ndof() == 0);
+      
+      if (!isFake) {
+	pv.SetXYZ(v->x(), v->y(), v->z());
+	vtx = *v;
+	break;
+      }
+    }
+  }//if( runOnVtx_ )
+
+  //initTriggerFilters(e);
+
+  if(runOnReco_) fillGlobalEvent(e, es);
+  if (!e.isRealData()) {
+    fillGenInfo(e);
+    if (doGenParticles_)
+      fillGenPart(e);
+  }
+
+  if(dumpPhotons_) fillPhotons(e, es); // FIXME: photons have different vertex (not pv)
+  if(dumpElectrons_) fillElectrons(e, es, pv);
+  if(dumpMuons_) fillMuons(e, pv, vtx);
+
+  if (dumpJets_)        fillJets(e,es);
+
+  hEvents_->Fill(1.5);
+
+  //std::cout<<"Filling tree"<<std::endl;
+  tree_->Fill();
+
 }
 
 
-Analyzer::~Analyzer()
-{
- 
-   // do anything here that needs to be done at desctruction time
-   // (e.g. close files, deallocate resources etc.)
+// void Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions)
+// {
+//   //The following says we do not know what parameters are allowed so do no validation
+//   // Please change this to state exactly what you do use, even if it is no parameters
+//   edm::ParameterSetDescription desc;
+//   desc.setUnknown();
+//   descriptions.addDefault(desc);
+// }
 
-}
-
-
-//
-// member functions
-//
-
-// ------------ method called for each event  ------------
-void
-Analyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
-{
-
-  
-   using namespace edm;
-   using namespace std;
-
-
-   //std::cout<<"Inside analyse"<<std::endl;
-
-   egmeleEcalE.clear();
-   egmeleSCE.clear();
-   egmelerawSCE.clear();
-   egmeleSCEta.clear();
-   egmeleSCPhi.clear();
-   egmelePhi.clear();
-   egmeleEta.clear();
-   egmeleGenE.clear();
-   egmeleGenEta.clear();
-   egmeleGenPhi.clear();
-   egmeleGenPt.clear();
-
-   mcPID       .clear();
-   mcVtx       .clear();
-   mcVty       .clear();
-   mcVtz       .clear();
-   mcPt        .clear();
-   mcMass      .clear();
-   mcEta       .clear();
-   mcPhi       .clear();
-   mcE         .clear();
-   mcEt        .clear();
-   mcGMomPID   .clear();
-   mcMomPID    .clear();
-   mcMomPt     .clear();
-   mcMomMass   .clear();
-   mcMomEta    .clear();
-   mcMomPhi    .clear();
-   //mcIndex     .clear();
-   nMC_ = 0;
-   
-   run = iEvent.id().run();
-   event = iEvent.id().event();
-   lumi = iEvent.luminosityBlock();
-
-   if(doRecoEle_){
-     edm::Handle<edm::View<pat::Electron> > recoElectronHandle;
-     iEvent.getByToken(recoelectronCollection_, recoElectronHandle);
-     
-     //std::cout<<"Taking handle"<<std::endl;
-     
-     if(!recoElectronHandle.isValid()){
-       
-       std::cout<<"electron handle is not valid"<<endl;
-       return;
-     }
-
-
-     regress_->setEvent(iEvent);
-     //cout<<"Set event"<<endl;
-     regress_->setEventContent(iSetup);
-     //cout<<"Set eventContent"<<endl;
-     
-     if (recoElectronHandle.isValid() && recoElectronHandle->size()>1) {
-       
-       //std::cout<<"no. of electrons "<<recoElectronHandle->size()<<std::endl;
-       
-       for (edm::View<pat::Electron>::const_iterator iEle = recoElectronHandle->begin(); iEle != recoElectronHandle->end(); ++iEle) {
-	 
-	 
-	 const pat::Electron& electron=(*iEle);
-	 
-	 //reco::Electron electronRef(electron);
-	 
-	 double E = iEle->energy();
-	 double scRaw = iEle->superCluster()->rawEnergy();
-	 double corrE = iEle->correctedEcalEnergy();
-	 double scE = iEle->superCluster()->energy();
-	 double scEta = iEle->superCluster()->eta();
-	 double scPhi = iEle->superCluster()->phi();
-	 
-	 egmeleEcalE.push_back(corrE);
-	 egmelerawSCE.push_back(scRaw);
-	 egmeleSCE.push_back(scE);
-	 egmeleSCEta.push_back(scEta);
-	 egmeleSCPhi.push_back(scPhi);
-	 egmelePhi.push_back(iEle->phi());
-	 egmeleEta.push_back(iEle->eta());
-	 
-	 if(iEle->genLepton() != 0) {
-	   egmeleGenE.push_back(iEle->genLepton()->energy());
-	   egmeleGenEta.push_back(iEle->genLepton()->eta());
-	   egmeleGenPhi.push_back(iEle->genLepton()->phi());
-	 egmeleGenPt.push_back(iEle->genLepton()->pt());
-	 }
-	 
-	 else{
-	   egmeleGenE.push_back(-999);
-	   egmeleGenEta.push_back(-999);
-	   egmeleGenPhi.push_back(-999);
-	   egmeleGenPt.push_back(-999);
-	 }
-	 
-	 
-       }//for (edm::View<pat::Electron>::const_iterator iEle = recoElectronHandle->begin(); iEl...)
-       
-     }//if (recoElectronHandle.isValid() && recoElectronHandle->size()>1)
-   }// if(doRecoEle_)
-
-   
-   ///store gen info only when there are atleast 2 electrons in the event
-   
-   std::cout<<"================================="<<std::endl;
-
-     if(doGenParticles_){
-       edm::Handle<std::vector<reco::GenParticle> > genParticlesHandle;
-       iEvent.getByToken(genParticlesCollection_, genParticlesHandle);
-       
-       for (std::vector<reco::GenParticle>::const_iterator ip = genParticlesHandle->begin(); ip != genParticlesHandle->end(); ++ip) {
-	 //genIndex++;
-	 
-	 int status = ip->status();
-	 
-       // keep non-FSR photons with pT > 5.0 and all leptons with pT > 3.0;
-	 bool photonOrLepton =
-	   (ip->pdgId() == 22 && (ip->isPromptFinalState() || ip->isLastCopy())) ||
-	   (status == 1 && abs(ip->pdgId()) == 11 && (ip->isPromptFinalState() || ip->isLastCopy()));
-	 //|| (status == 1 && abs(ip->pdgId()) == 13 && (ip->isPromptFinalState() || ip->isLastCopy())) ||
-	 //(status == 1 && (abs(ip->pdgId()) == 12 || abs(ip->pdgId()) == 14 || abs(ip->pdgId()) == 16)) ||
-	 //(status == 1 && ( abs(ip->pdgId()) >= 11 && abs(ip->pdgId()) <= 16 ) && ip->pt() > 3.0)  ||
-	 //(status < 10 && abs(ip->pdgId()) == 15 && ip->pt() > 3.0);
-	 
-
-
-	 
-	 
-	 int mcGMomPID_ = -999;
-	 int mcMomPID_  = -999;
-	 float mcMomPt_    = -999.;
-	 float mcMomMass_  = -999.;
-	 float mcMomEta_   = -999.;
-	 float mcMomPhi_   = -999.;
-	 
-	 if (photonOrLepton) {
-	   
-	   const reco::Candidate *p = (const reco::Candidate*)&(*ip);
-	   if (!p->mother()) continue;
-	   
-	 mcPID    .push_back(p->pdgId());
-	 mcVtx    .push_back(p->vx());
-	 mcVty    .push_back(p->vy());
-	 mcVtz    .push_back(p->vz());
-	 mcPt     .push_back(p->pt());
-	 mcMass   .push_back(p->mass());
-	 mcEta    .push_back(p->eta());
-	 mcPhi    .push_back(p->phi());
-	 mcE      .push_back(p->energy());
-	 mcEt     .push_back(p->et());
-	 //mcStatus .push_back(p->status());
-
-
-	 
-	 reco::GenParticleRef partRef = reco::GenParticleRef(genParticlesHandle,
-							     ip-genParticlesHandle->begin());
-	 genpartparentage::GenParticleParentage particleHistory(partRef);
-	 
-	 if ( particleHistory.hasRealParent() ) {
-	   reco::GenParticleRef momRef = particleHistory.parent();
-	   if ( momRef.isNonnull() && momRef.isAvailable() ) {
-	     mcMomPID_  = momRef->pdgId();
-	     mcMomPt_   = momRef->pt();
-	     mcMomMass_ = momRef->mass();
-	     mcMomEta_  = momRef->eta();
-	     mcMomPhi_ = momRef->phi();
-	     mcMomPID.push_back(mcMomPID_);
-	     mcMomPt.push_back(mcMomPt_);
-	     mcMomMass.push_back(mcMomMass_);
-	     mcMomEta.push_back(mcMomEta_);
-	     mcMomPhi.push_back(mcMomPhi_);
-	 
-
-	   }//if ( momRef.isNonnull() && momRef.isAvailable() )
-	 }//if ( particleHistory.hasRealParent() )
-
-
-	 nMC_++;
-	 
-       }//if (photonOrLepton)
-	 std::cout<<"ID : status : isPromptFinalState: isFinalCopy : mothID "<<ip->pdgId()<<" "<<status<<" "<<ip->isPromptFinalState()<<" "<<ip->isLastCopy()<<" "<<mcMomPID_<<std::endl;  
-     }//for (vector<reco::GenParticle>::const_iterator ip = genParticlesHandle->begin(); ip != genParticlesHandl
-     }//if(doGenParticles_)
-
-     tree_->Fill();
-
-}
-
-// ------------ method called once each job just before starting event loop  ------------
-void 
-Analyzer::beginJob()
-{
-}
-
-// ------------ method called once each job just after ending the event loop  ------------
-void 
-Analyzer::endJob() 
-{
-}
-
-// ------------ method fills 'descriptions' with the allowed parameters for the module  ------------
-void
-Analyzer::fillDescriptions(edm::ConfigurationDescriptions& descriptions) {
-  //The following says we do not know what parameters are allowed so do no validation
-  // Please change this to state exactly what you do use, even if it is no parameters
-  edm::ParameterSetDescription desc;
-  desc.setUnknown();
-  descriptions.addDefault(desc);
-}
-
-//define this as a plug-in
 DEFINE_FWK_MODULE(Analyzer);

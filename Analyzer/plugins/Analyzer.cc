@@ -16,6 +16,8 @@ Analyzer::Analyzer(const edm::ParameterSet& ps) :
   addFilterInfoAOD_          = ps.getParameter<bool>("addFilterInfoAOD");
   addFilterInfoMINIAOD_      = ps.getParameter<bool>("addFilterInfoMINIAOD");
 
+  doGenJets_            = ps.getParameter<bool>("doGenJets");
+
   doGenParticles_            = ps.getParameter<bool>("doGenParticles");
   doCalib_            = ps.getParameter<bool>("doCalib");
   runOnParticleGun_          = ps.getParameter<bool>("runOnParticleGun");
@@ -63,6 +65,10 @@ Analyzer::Analyzer(const edm::ParameterSet& ps) :
 
   jetsAK4Label_              = consumes<View<pat::Jet> >               (ps.getParameter<InputTag>("ak4JetSrc"));
   jetsAK8Label_              = consumes<View<pat::Jet> >               (ps.getParameter<InputTag>("ak8JetSrc"));
+
+
+  GenJetLabel_              = consumes<std::vector<reco::GenJet> >               (ps.getParameter<InputTag>("GenJetLabel"));
+
   //boostedDoubleSVLabel_      = consumes<reco::JetTagCollection>        (ps.getParameter<InputTag>("boostedDoubleSVLabel"));
   newparticles_              =                                          ps.getParameter< vector<int > >("newParticles");
   //jecAK8PayloadNames_        =                                          ps.getParameter<std::vector<std::string> >("jecAK8PayloadNames"); 
@@ -111,6 +117,10 @@ Analyzer::Analyzer(const edm::ParameterSet& ps) :
     branchesGenInfo(tree_, fs);
     branchesGenPart(tree_);
   }
+
+  if( doGenJets_)
+    branchesGenJetPart(tree_);
+
 
   if(dumpPhotons_) branchesPhotons(tree_);
   if(dumpElectrons_) branchesElectrons(tree_);
@@ -173,6 +183,10 @@ void Analyzer::analyze(const edm::Event& e, const edm::EventSetup& es) {
   if(dumpPhotons_) fillPhotons(e, es); // FIXME: photons have different vertex (not pv)
   if(dumpElectrons_) fillElectrons(e, es, pv);
   if(dumpMuons_) fillMuons(e, pv, vtx);
+  
+  if (!e.isRealData()) 
+    if(doGenJets_) fillGenJetInfo(e);
+
 
   if (dumpJets_)        fillJets(e,es);
 

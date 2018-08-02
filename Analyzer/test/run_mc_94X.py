@@ -1,36 +1,6 @@
 import FWCore.ParameterSet.Config as cms
-import FWCore.ParameterSet.VarParsing as VarParsing
 
 process = cms.Process('analyser')
-
-
-### SETUP OPTIONS
-options = VarParsing.VarParsing('standard')
-
-options.register('inFileName',
-                 "file:/eos/cms/store/user/rchatter/aTGC/Signal/Sherpa/sherpa_13TeV_aNTGC_Zgg_h3g1p1e-3_h4g3p8e-6_MASTER_cff_py_GEN.root",
-                 #'/store/mc/RunIISummer16MiniAODv2/GJets_Pt-20To100_13TeV-sherpa/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/60000/F66203F1-24CD-E611-AB6D-0CC47A5FA211.root',
-                 VarParsing.VarParsing.multiplicity.singleton, # singleton or list
-                 VarParsing.VarParsing.varType.string,          # string, int, or float
-                 "input file name")
-
-
-options.register('outFileName',
-                 "aNTGC_h3g1p1e-3_h4g3p8e-6.root",
-                 VarParsing.VarParsing.multiplicity.singleton, # singleton or list
-                 VarParsing.VarParsing.varType.string,          # string, int, or float
-                 "output file name")
-
-
-options.register('maxEvent',
-                 100,
-                 VarParsing.VarParsing.multiplicity.singleton, # singleton or list
-                 VarParsing.VarParsing.varType.int,          # string, int, or float
-                 "maximum number of events to run over")
-options.parseArguments()
-
-print "maxevents are ",options.maxEvent
-
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.options = cms.untracked.PSet( allowUnscheduled = cms.untracked.bool(True) )
@@ -45,10 +15,7 @@ process.load("Configuration.StandardSequences.MagneticField_cff")
 
 #process.Tracer = cms.Service("Tracer")
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
-process.maxEvents = cms.untracked.PSet( 
-    input = cms.untracked.int32(options.maxEvent )
-)
-
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.source = cms.Source("PoolSource",
@@ -58,8 +25,7 @@ process.source = cms.Source("PoolSource",
         #'/store/mc/RunIISummer16MiniAODv2/GJets_Pt-20To100_13TeV-sherpa/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/60000/ECCEE377-42CD-E611-80DA-002590494FEA.root'
         #'file:sherpa_13TeV_aNTGC_ZZg_h3z0_h4z0_ptmin10_ptmax100_MASTER_cff_py_GEN.root'
         #'file:sherpa_13TeV_aNTGC_ZZg_h3z0_h4z0_ptmin10_ptmax100_MASTER_cff_py_GEN_SIM_DIGI_L1_DIGI2RAW_RAW2DIGI_L1Reco_RECO.root'
-        #'file:tryminiaod.root'
-        options.inFileName
+        'file:tryminiaod.root'
         ))
 
 #process.load("PhysicsTools.PatAlgos.patSequences_cff")
@@ -90,10 +56,7 @@ process.load( "PhysicsTools.PatAlgos.selectionLayer1.selectedPatCandidates_cff" 
 
 process.load("Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff")
 
-process.TFileService = cms.Service("TFileService", 
-                                   fileName = cms.string(options.outFileName) 
-                                   #fileName = cms.string('ggtree_mc.root')
-                                   )
+process.TFileService = cms.Service("TFileService", fileName = cms.string('ggtree_mc.root'))
 
 # MET correction and uncertainties
 from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
@@ -102,7 +65,7 @@ runMetCorAndUncFromMiniAOD(process,
                            )
 
 
-runAOD=True
+runAOD=False
 
 print "runing on AOD:", runAOD
 
@@ -129,7 +92,8 @@ process.analyzer.dumpJets=cms.bool(False)
 process.analyzer.dumpPhotons=cms.bool(False)
 process.analyzer.dumpElectrons=cms.bool(False)
 process.analyzer.dumpMuons=cms.bool(False)
-process.analyzer.runOnVtx=cms.bool(False)       
+process.analyzer.runOnVtx=cms.bool(False)     
+process.analyzer.doGenJets=cms.bool(True)       
 process.analyzer.runOnReco=cms.bool(False)                 
 process.analyzer.runphoIDVID=cms.bool(False)
 process.analyzer.runeleIDVID=cms.bool(False)

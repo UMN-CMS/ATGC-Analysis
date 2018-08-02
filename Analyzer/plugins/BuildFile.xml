@@ -23,4 +23,5 @@
 <use name="HLTrigger/HLTcore"/>
 <use name="DataFormats/Math"/>
 <use name="RecoEgamma/EgammaTools"/>
+<use name="DataFormats/JetReco"/>
 <flags EDM_PLUGIN="1"/>

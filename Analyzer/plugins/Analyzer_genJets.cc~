@@ -47,67 +47,6 @@ vector<float>    mcTrkIsoDR03;
 vector<float>    mcCalIsoDR04;
 vector<float>    mcTrkIsoDR04;
 
-float getGenCalIso(edm::Handle<reco::GenParticleCollection> handle,
-                   reco::GenParticleCollection::const_iterator thisPart,
-                   float dRMax, bool removeMu, bool removeNu) {
-
-  // Returns Et sum.
-  float etSum = 0;
-
-  for (reco::GenParticleCollection::const_iterator p = handle->begin(); p != handle->end(); ++p) {
-    if (p == thisPart) continue;
-    if (p->status() != 1) continue;
-
-    // has to come from the same collision
-    if (thisPart->collisionId() != p->collisionId())
-        continue;
-
-    int pdgCode = abs(p->pdgId());
-
-    // skip muons/neutrinos, if requested
-    if (removeMu && pdgCode == 13) continue;
-    if (removeNu && (pdgCode == 12 || pdgCode == 14 || pdgCode == 16)) continue;
-    
-    // pass a minimum Et threshold
-    // if (p->et() < 0) continue;
-
-    // must be within deltaR cone
-    float dR = reco::deltaR(thisPart->momentum(), p->momentum());
-    if (dR > dRMax) continue;
-
-    etSum += p->et();
-  }
-
-  return etSum;
-}
-
-float getGenTrkIso(edm::Handle<reco::GenParticleCollection> handle,
-                   reco::GenParticleCollection::const_iterator thisPart, float dRMax) {
-
-   // Returns pT sum without counting neutral particles.
-   float ptSum = 0;
-
-   for (reco::GenParticleCollection::const_iterator p = handle->begin(); p != handle->end(); ++p) {
-      if (p == thisPart) continue;
-      if (p->status() != 1) continue;
-      if (p->charge() == 0) continue;  // do not count neutral particles
-
-      // has to come from the same collision
-      if (thisPart->collisionId() != p->collisionId())
-         continue;
-
-      // pass a minimum pt threshold
-      // if (p->pt() < 0) continue;
-
-      // must be within deltaR cone
-      float dR = reco::deltaR(thisPart->momentum(), p->momentum());
-      if (dR > dRMax) continue;
-
-      ptSum += p->pt();
-   }
-
-   return ptSum;
-}
 
 void Analyzer::branchesGenInfo(TTree* tree, edm::Service<TFileService> &fs) {
 
@@ -169,6 +108,27 @@ void Analyzer::branchesGenPart(TTree* tree) {
 
 void Analyzer::fillGenInfo(const edm::Event& e) {
 
+
+
+  if(doGenJets_){
+
+    
+    // Get GenJets
+    iEvent.getByToken(GenJetLabel_,genjets);
+    if(!genjets.isValid()) {
+      edm::LogWarning("GammaJetAnalysis") << "Could not find GenJet vector named "
+					  << genJetCollName_;
+      return;
+      }
+    nGenJets_= genjets->size();
+    
+  }//if(doGenJets_)
+
+
+
+
+
+  //////////////////////////////////////////////////////
   // cleanup from previous execution
   pthat_     = -99;
   processID_ = -99;
@@ -188,6 +148,8 @@ void Analyzer::fillGenInfo(const edm::Event& e) {
 
   edm::Handle<GenEventInfoProduct> genEventInfoHandle;
   e.getByToken(generatorLabel_, genEventInfoHandle);
+
+
 
   if (genEventInfoHandle.isValid()) {
 

@@ -29,7 +29,7 @@ analyzer = cms.EDAnalyzer("Analyzer",
 
                           triggerResults       = cms.InputTag("TriggerResults", "", "HLT"),
                           #patTriggerResults = cms.InputTag("TriggerResults", "", "PAT"),
-                          GenJetLabel          = cms.InputTag("slimmedGenJets"),
+                          GenJetLabel          = cms.InputTag("ak4GenJets"),
                           genParticleSrc       = cms.InputTag("prunedGenParticles"),
                           generatorLabel       = cms.InputTag("generator"),
                           LHEEventLabel        = cms.InputTag("externalLHEProducer"),
@@ -56,14 +56,8 @@ analyzer = cms.EDAnalyzer("Analyzer",
                              #ak4JetSrc                 = cms.InputTag("updatedJets"),
                           #ak4JetSrc                 = cms.InputTag("selectedUpdatedPatJetsUpdatedJEC"),
                           #ak8JetSrc                 = cms.InputTag("selectedUpdatedPatJetsUpdatedJECAK8"),
-
-                          #### original from ggNtuplizer
                           ak4JetSrc = cms.InputTag("slimmedJets"),
                           ak8JetSrc = cms.InputTag("slimmedJetsAK8"),
-                          ####Sj
-                          #ak4JetSrc = cms.InputTag("slimmedJetsPuppi"),
-                          #ak8JetSrc = cms.InputTag("slimmedJetsAK8"),
-
                           #boostedDoubleSVLabel      = cms.InputTag("pfBoostedDoubleSecondaryVertexAK8BJetTags"),
                           #pfLooseId                 = pfJetIDSelector.clone(),
 

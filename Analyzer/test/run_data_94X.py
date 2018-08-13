@@ -10,11 +10,11 @@ process.load('Configuration.StandardSequences.GeometryRecoDB_cff')
 process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff")
 from Configuration.AlCa.GlobalTag_condDBv2 import GlobalTag
 #process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc')
-process.GlobalTag = GlobalTag(process.GlobalTag, '94X_mc2017_realistic_v12')
+process.GlobalTag = GlobalTag(process.GlobalTag, '94X_dataRun2_ReReco_EOY17_v6')
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
 #process.Tracer = cms.Service("Tracer")
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(50) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
@@ -23,12 +23,10 @@ process.source = cms.Source("PoolSource",
         #'file:/data4/cmkuo/testfiles/DYJetsToLL_M-50_RunIIFall17.root'        
         #'/store/mc/RunIIFall17MiniAOD/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/94X_mc2017_realistic_v10-v1/00000/005DC030-D3F4-E711-889A-02163E01A62D.root'
         #'/store/mc/RunIISummer16MiniAODv2/GJets_Pt-20To100_13TeV-sherpa/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/60000/ECCEE377-42CD-E611-80DA-002590494FEA.root'
-        #'/store/mc/RunIIFall17MiniAODv2/GJets_HT-40To100_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_1core_94X_mc2017_realistic_v14_ext1-v1/710000/8C6BEB87-C544-E811-8720-002590E7E00A.root'
-        '/store/mc/RunIIFall17MiniAODv2/GJets_HT-600ToInf_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/DCD49E5F-4F71-E811-81A9-E0071B749C80.root'
-        #'/store/mc/RunIIFall17MiniAODv2/GJets_HT-100To200_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/90000/92EFF488-1344-E811-B4B1-0025904C6508.root'
         #'file:sherpa_13TeV_aNTGC_ZZg_h3z0_h4z0_ptmin10_ptmax100_MASTER_cff_py_GEN.root'
         #'file:sherpa_13TeV_aNTGC_ZZg_h3z0_h4z0_ptmin10_ptmax100_MASTER_cff_py_GEN_SIM_DIGI_L1_DIGI2RAW_RAW2DIGI_L1Reco_RECO.root'
         #'file:tryminiaod.root'
+        '/store/data/Run2017A/SinglePhoton/MINIAOD/PromptReco-v1/000/295/834/00000/9000F8FD-6548-E711-84D2-02163E0133F1.root'
         ))
 
 #process.load("PhysicsTools.PatAlgos.patSequences_cff")
@@ -59,7 +57,7 @@ process.load( "PhysicsTools.PatAlgos.selectionLayer1.selectedPatCandidates_cff" 
 
 process.load("Configuration.StandardSequences.MagneticField_AutoFromDBCurrent_cff")
 
-process.TFileService = cms.Service("TFileService", fileName = cms.string('ggtree_mc.root'))
+process.TFileService = cms.Service("TFileService", fileName = cms.string('ggtree_data.root'))
 
 # MET correction and uncertainties
 from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
@@ -89,14 +87,14 @@ process.load("ATGC-Analysis.Analyzer.ggPhotonIso_CITK_PUPPI_cff")
 process.analyzer.dumpSoftDrop= cms.bool(True)
 #process.analyzer.jecAK8PayloadNames=cms.vstring(jecLevels)
 process.analyzer.isAOD=cms.bool(runAOD)
-process.analyzer.doGenParticles=cms.bool(True)
+process.analyzer.doGenParticles=cms.bool(False)
 process.analyzer.dumpSubJets=cms.bool(True)
 process.analyzer.dumpJets=cms.bool(True)
 process.analyzer.dumpPhotons=cms.bool(True)
 process.analyzer.dumpElectrons=cms.bool(True)
 process.analyzer.dumpMuons=cms.bool(True)
 process.analyzer.runOnVtx=cms.bool(True)     
-process.analyzer.doGenJets=cms.bool(True)       
+process.analyzer.doGenJets=cms.bool(False)       
 process.analyzer.runOnReco=cms.bool(True)                 
 process.analyzer.runphoIDVID=cms.bool(True)
 process.analyzer.runeleIDVID=cms.bool(True)

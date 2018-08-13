@@ -28,6 +28,7 @@
 #include "JetMETCorrections/Modules/interface/JetResolution.h"
 //#include "PhysicsTools/SelectorUtils/interface/PFJetIDSelectionFunctor.h"
 #include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
+#include "DataFormats/JetReco/interface/GenJetCollection.h"
 
 using namespace std;
 
@@ -61,12 +62,15 @@ class Analyzer : public edm::EDAnalyzer {
 			    double r_iso_min, double r_iso_max, double kt_scale, bool charged_only);
 
   void branchesGlobalEvent(TTree*);
+
   void branchesGenInfo    (TTree*, edm::Service<TFileService>&);
   void branchesGenPart    (TTree*);
   void branchesPhotons    (TTree*);
   void branchesElectrons  (TTree*);
   void branchesMuons      (TTree*);
   void branchesJets       (TTree*);
+
+  void branchesGenJetPart    (TTree*);
 
   void fillGlobalEvent(const edm::Event&, const edm::EventSetup&);
   void fillGenInfo    (const edm::Event&);
@@ -76,6 +80,8 @@ class Analyzer : public edm::EDAnalyzer {
   void fillMuons      (const edm::Event&, math::XYZPoint&, const reco::Vertex);
   void fillJets       (const edm::Event&, const edm::EventSetup&);
 
+  void fillGenJetInfo    (const edm::Event&);
+
   void cleanupPhotons();
 
   bool development_;
@@ -84,6 +90,8 @@ class Analyzer : public edm::EDAnalyzer {
   bool doNoHFMET_;
   bool doCalib_;
   bool doGenParticles_;
+  bool doGenJets_;
+
   bool runOnParticleGun_;
   bool runOnSherpa_;
   bool runOnVtx_;
@@ -132,7 +140,8 @@ class Analyzer : public edm::EDAnalyzer {
   edm::EDGetTokenT<reco::JetTagCollection>         boostedDoubleSVLabel_;
   edm::EDGetTokenT<pat::PackedCandidateCollection> pckPFCandidateCollection_;
 
-  
+  edm::EDGetTokenT<std::vector<reco::GenJet> >      GenJetLabel_;
+
   ///Photon ID in VID framework - 11th May, 2015
   // photon ID decision objects and isolations
   edm::EDGetTokenT<edm::ValueMap<bool> >  phoLooseIdMapToken_;

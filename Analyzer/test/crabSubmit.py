@@ -3,9 +3,10 @@ import sys
 config = config()
 
 #submitVersion = "V0"
-submitVersion = "V1"
+#submitVersion = "V1"
 
 mainOutputDir = '/store/user/shilpi/aNTGC/%s' % submitVersion
+#mainOutputDir = '/store/caf/user/shilpi/aNTGC/%s' % submitVersion
 
 config.General.transferLogs = False
 

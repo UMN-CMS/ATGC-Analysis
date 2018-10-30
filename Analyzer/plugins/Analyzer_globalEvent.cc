@@ -192,7 +192,8 @@ void Analyzer::fillGlobalEvent(const edm::Event& e, const edm::EventSetup& es) {
     else if (name.find("HLT_Photon90_v")                    != string::npos) bitPho =  5; 
     else if (name.find("HLT_Photon120_v")                   != string::npos) bitPho =  6; 
     else if (name.find("HLT_Photon175_v")                   != string::npos) bitPho =  7; 
-    else if (name.find("HLT_Photon250_NoHE_v")              != string::npos) bitPho =  8; 
+    //else if (name.find("HLT_Photon250_NoHE_v")              != string::npos) bitPho =  8; 
+    else if (name.find("HLT_Photon200_v")              != string::npos) bitPho =  8; 
     else if (name.find("HLT_Photon300_NoHE_v")              != string::npos) bitPho =  9; 
     else if (name.find("HLT_Photon500_v")                   != string::npos) bitPho = 10; 
     else if (name.find("HLT_Photon600_v")                   != string::npos) bitPho = 11; 

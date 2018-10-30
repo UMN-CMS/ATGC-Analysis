@@ -1033,6 +1033,12 @@ void Analyzer::fillJets(const edm::Event& e, const edm::EventSetup& es) {
       vecPuppiSDSJe.clear();
       vecPuppiSDSJcharge.clear();
       vecPuppiSDSJflavour.clear();
+      
+      vecPuppiSDSJnb1ecf2.clear();
+      vecPuppiSDSJnb1ecf3.clear();
+      vecPuppiSDSJnb2ecf2.clear();
+      vecPuppiSDSJnb2ecf3.clear();
+
       nPuppiSJs = 0;
 
       TLorentzVector puppi_softdrop, puppi_softdrop_subjet;

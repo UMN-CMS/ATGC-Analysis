@@ -367,7 +367,7 @@ void Analyzer::fillGenPart(const edm::Event& e) {
       
     //std::cout<<"photonOrLepton "<<photonOrLepton<<std::endl;
 
-
+    bool isGluon = abs(ip->pdgId())==21 && ip->status()==23;
       
     // select also Z, W, H, top and b 
     bool heavyParticle =
@@ -382,7 +382,7 @@ void Analyzer::fillGenPart(const edm::Event& e) {
       if (abs(ip->pdgId()) == newparticles_[inp]) newParticle = true;
     }
     
-    if ( heavyParticle || photonOrLepton || quarks || newParticle ) {
+    if ( heavyParticle || photonOrLepton || quarks || newParticle || isGluon ) {
       
       const reco::Candidate *p = (const reco::Candidate*)&(*ip);
       if (!runOnParticleGun_ && !p->mother()) continue;

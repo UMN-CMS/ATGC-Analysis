@@ -95,6 +95,9 @@ vector<float>  eleResol_rho_dn_;
 vector<float>  eleResol_phi_up_;
 vector<float>  eleResol_phi_dn_;
 
+vector<float>  eleCorrEcalEn_;
+vector<float>  eleRawSCEn_;
+
 vector<vector<float> > eleGSFPt_;
 vector<vector<float> > eleGSFEta_;
 vector<vector<float> > eleGSFPhi_;
@@ -229,6 +232,9 @@ void Analyzer::branchesElectrons(TTree* tree) {
   tree->Branch("eleResol_phi_up",             &eleResol_phi_up_);
   tree->Branch("eleResol_phi_dn",             &eleResol_phi_dn_);
 
+  tree->Branch("eleCorrEcalEn",               &eleCorrEcalEn_);
+  tree->Branch("eleRawSCEn",                  &eleRawSCEn_);
+
   if (development_) {
     tree->Branch("eleESEnP1Raw",              &eleESEnP1Raw_);
     tree->Branch("eleESEnP2Raw",              &eleESEnP2Raw_);
@@ -359,6 +365,9 @@ void Analyzer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, mat
   eleResol_phi_up_            .clear();
   eleResol_phi_dn_            .clear();
 
+  eleCorrEcalEn_              .clear();
+  eleRawSCEn_                 .clear();
+  
   nEle_ = 0;
 
   edm::Handle<edm::View<pat::Electron> > electronHandle;
@@ -514,6 +523,8 @@ void Analyzer::fillElectrons(const edm::Event &e, const edm::EventSetup &es, mat
     eleDr03HcalTowerSumEt_      .push_back(iEle->dr03HcalTowerSumEt());
     eleDr03TkSumPt_             .push_back(iEle->dr03TkSumPt());
 
+    eleCorrEcalEn_              .push_back(iEle->corrections().correctedEcalEnergy);
+    eleRawSCEn_                 .push_back(iEle->superCluster()->rawEnergy());
     /*
     // systematic uncertainties for energy scale and resolution 
     DetId seedDetId = iEle->superCluster()->seed()->seed();
